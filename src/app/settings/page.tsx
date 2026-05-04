@@ -6,6 +6,13 @@ import { updateProfile, changeRole } from "@/lib/actions/settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { User } from "@supabase/supabase-js";
+
+function getMetadataValue(user: User, key: string) {
+  const metadata = user.user_metadata as Record<string, unknown> | undefined;
+  const value = metadata?.[key];
+  return typeof value === "string" ? value : "";
+}
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -15,8 +22,8 @@ export default async function SettingsPage() {
   if (!user) redirect("/login");
 
   const role =
-    user.app_metadata?.role ?? (user.user_metadata as any)?.role ?? "student";
-  const name = (user.user_metadata as any)?.name ?? "";
+    user.app_metadata?.role ?? getMetadataValue(user, "role") ?? "student";
+  const name = getMetadataValue(user, "name");
 
   return (
     <div className="min-h-screen flex flex-col">

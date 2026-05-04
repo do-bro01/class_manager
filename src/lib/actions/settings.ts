@@ -2,7 +2,6 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function updateProfile(formData: FormData) {
   const supabase = await createClient();
@@ -14,20 +13,19 @@ export async function updateProfile(formData: FormData) {
   redirect("/settings");
 }
 
-export async function changeRole(formData: FormData) {
+export async function changeRole() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  try {
-    const admin = createAdminClient();
-    await admin.auth.admin.updateUserById(user.id, {
-      app_metadata: { role: "instructor" },
-    });
-  } catch (err) {
-    // ignore admin errors
+  const { error } = await supabase.auth.updateUser({
+    data: { role: "instructor" },
+  });
+
+  if (error) {
+    throw new Error(error.message);
   }
 
   redirect("/settings");

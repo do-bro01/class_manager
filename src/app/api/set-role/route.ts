@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     await admin.auth.admin.updateUserById(userId, { app_metadata: { role } });
 
     return NextResponse.json({ success: true });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 }

@@ -2,7 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { isInstructor as hasInstructorRole } from "@/lib/auth/role";
+import type { User } from "@supabase/supabase-js";
 
 export async function login(formData: FormData) {
   const supabase = await createClient();
@@ -26,21 +27,14 @@ export async function signup(formData: FormData) {
   const password = formData.get("password") as string;
   const role = (formData.get("role") as string) || "student";
 
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { role } },
+  });
 
   if (error) {
     return { error: error.message };
-  }
-
-  // try to set app_metadata via service role admin client so role is available in JWT
-  try {
-    const userId = data?.user?.id;
-    if (userId && role) {
-      const admin = createAdminClient();
-      await admin.auth.admin.updateUserById(userId, { app_metadata: { role } });
-    }
-  } catch (err) {
-    // ignore admin errors (service key may not be configured in dev)
   }
 
   return {
@@ -63,8 +57,6 @@ export async function getUser() {
   return user;
 }
 
-export function isInstructor(
-  user: { app_metadata?: { role?: string } } | null,
-) {
-  return user?.app_metadata?.role === "instructor";
+export function isInstructor(user: User | null) {
+  return hasInstructorRole(user);
 }

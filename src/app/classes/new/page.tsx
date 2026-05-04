@@ -1,12 +1,15 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import Header from '@/components/layout/Header'
-import ClassForm from '@/components/features/ClassForm'
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { isInstructor } from "@/lib/auth/role";
+import Header from "@/components/layout/Header";
+import ClassForm from "@/components/features/ClassForm";
 
 export default async function NewClassPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user || user.app_metadata?.role !== 'instructor') redirect('/dashboard')
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !isInstructor(user)) redirect("/dashboard");
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -16,5 +19,5 @@ export default async function NewClassPage() {
         <ClassForm />
       </main>
     </div>
-  )
+  );
 }

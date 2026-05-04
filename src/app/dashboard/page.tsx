@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getClasses } from "@/lib/actions/class";
 import { getEnrolledClasses } from "@/lib/actions/enrollment";
+import { isInstructor } from "@/lib/auth/role";
 import Header from "@/components/layout/Header";
 import InviteCodeInput from "@/components/features/InviteCodeInput";
 import { Button } from "@/components/ui/button";
@@ -23,9 +24,9 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const isInstructor = user.app_metadata?.role === "instructor";
+  const isInstructorUser = isInstructor(user);
 
-  if (isInstructor) {
+  if (isInstructorUser) {
     const classes = await getClasses();
     return (
       <div className="min-h-screen flex flex-col">

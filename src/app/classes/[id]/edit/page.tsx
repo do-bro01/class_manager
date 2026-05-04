@@ -1,17 +1,24 @@
-import { redirect, notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { getClass } from '@/lib/actions/class'
-import Header from '@/components/layout/Header'
-import ClassForm from '@/components/features/ClassForm'
+import { redirect, notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { getClass } from "@/lib/actions/class";
+import { isInstructor } from "@/lib/auth/role";
+import Header from "@/components/layout/Header";
+import ClassForm from "@/components/features/ClassForm";
 
-export default async function EditClassPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user || user.app_metadata?.role !== 'instructor') redirect('/dashboard')
+export default async function EditClassPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !isInstructor(user)) redirect("/dashboard");
 
-  const cls = await getClass(id)
-  if (!cls) notFound()
+  const cls = await getClass(id);
+  if (!cls) notFound();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -21,5 +28,5 @@ export default async function EditClassPage({ params }: { params: Promise<{ id: 
         <ClassForm cls={cls} />
       </main>
     </div>
-  )
+  );
 }

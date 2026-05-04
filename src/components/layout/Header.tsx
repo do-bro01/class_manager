@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { isInstructor } from "@/lib/auth/role";
 import { Button } from "@/components/ui/button";
 import type { User } from "@supabase/supabase-js";
 
 export default function Header({ user }: { user: User }) {
   const router = useRouter();
-  const isInstructor = user.app_metadata?.role === "instructor";
+  const isInstructorUser = isInstructor(user);
 
   async function handleLogout() {
     const supabase = createClient();
@@ -34,7 +35,7 @@ export default function Header({ user }: { user: User }) {
             설정
           </Link>
           <span className="text-sm text-muted-foreground hidden sm:block">
-            {isInstructor ? "강사" : "수강생"} · {user.email}
+            {isInstructorUser ? "강사" : "수강생"} · {user.email}
           </span>
           <Button variant="ghost" size="sm" onClick={handleLogout}>
             로그아웃
