@@ -82,6 +82,80 @@ export async function createSession(
   }
 }
 
+export async function createRecurringSessions(
+  classId: string,
+  params: {
+    startDate: string;
+    weekdays: number[];
+    weeks: number;
+    titlePrefix: string;
+  },
+): Promise<ActionResult<{ count: number }>> {
+  try {
+    const { supabase } = await requireInstructorOfClass(classId);
+
+    const { startDate, weekdays, weeks, titlePrefix } = params;
+    const trimmedPrefix = titlePrefix.trim();
+
+    if (!startDate)
+      return { success: false, error: "시작일을 선택해주세요." };
+    if (!Array.isArray(weekdays) || weekdays.length === 0)
+      return { success: false, error: "요일을 1개 이상 선택해주세요." };
+    if (!weeks || weeks < 1 || weeks > 52)
+      return { success: false, error: "주차 수는 1~52 사이여야 합니다." };
+    if (!trimmedPrefix)
+      return { success: false, error: "제목 접두사를 입력해주세요." };
+    for (const w of weekdays) {
+      if (!Number.isInteger(w) || w < 0 || w > 6)
+        return { success: false, error: "요일 값이 올바르지 않습니다." };
+    }
+
+    const start = new Date(`${startDate}T00:00:00`);
+    if (Number.isNaN(start.getTime()))
+      return { success: false, error: "시작일이 올바르지 않습니다." };
+
+    const sortedWeekdays = [...new Set(weekdays)].sort((a, b) => a - b);
+    const startDow = start.getDay();
+
+    const sessionsToInsert: {
+      class_id: string;
+      title: string;
+      session_date: string;
+      check_in_open: boolean;
+    }[] = [];
+
+    for (let week = 0; week < weeks; week++) {
+      let occurrenceInWeek = 0;
+      for (const dow of sortedWeekdays) {
+        const offset = (dow - startDow + 7) % 7 + week * 7;
+        const date = new Date(start);
+        date.setDate(start.getDate() + offset);
+        const iso = date.toISOString().slice(0, 10);
+        const suffix =
+          sortedWeekdays.length > 1 ? `-${occurrenceInWeek + 1}` : "";
+        sessionsToInsert.push({
+          class_id: classId,
+          title: `${trimmedPrefix} ${week + 1}주차${suffix}`,
+          session_date: iso,
+          check_in_open: false,
+        });
+        occurrenceInWeek++;
+      }
+    }
+
+    const { error } = await supabase
+      .from("attendance_sessions")
+      .insert(sessionsToInsert);
+
+    if (error) return { success: false, error: error.message };
+
+    revalidatePath(`/classes/${classId}`);
+    return { success: true, data: { count: sessionsToInsert.length } };
+  } catch (e) {
+    return { success: false, error: (e as Error).message };
+  }
+}
+
 export async function updateSession(
   sessionId: string,
   classId: string,

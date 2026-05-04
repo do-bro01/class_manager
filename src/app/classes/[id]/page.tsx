@@ -8,6 +8,7 @@ import {
   getSessionsWithStats,
   getStudentAttendance,
 } from "@/lib/actions/attendance";
+import { getMaterials } from "@/lib/actions/material";
 import { isInstructor } from "@/lib/auth/role";
 import Header from "@/components/layout/Header";
 import NoticeList from "@/components/features/NoticeList";
@@ -15,6 +16,7 @@ import QnAList from "@/components/features/QnAList";
 import StudentList from "@/components/features/StudentList";
 import AttendanceSessionList from "@/components/features/AttendanceSessionList";
 import StudentAttendanceView from "@/components/features/StudentAttendanceView";
+import MaterialsList from "@/components/features/MaterialsList";
 import DeleteClassButton from "@/components/features/DeleteClassButton";
 import CopyButton from "@/components/features/CopyButton";
 import { Badge } from "@/components/ui/badge";
@@ -39,14 +41,21 @@ export default async function ClassDetailPage({
   const cls = await getClass(id);
   if (!cls) notFound();
 
-  const [enrollments, notices, qnas, attendanceSessions, studentAttendance] =
-    await Promise.all([
-      getEnrollments(id),
-      getNotices(id),
-      getQnAs(id),
-      isInstructorUser ? getSessionsWithStats(id) : Promise.resolve([]),
-      !isInstructorUser ? getStudentAttendance(id) : Promise.resolve(null),
-    ]);
+  const [
+    enrollments,
+    notices,
+    qnas,
+    attendanceSessions,
+    studentAttendance,
+    materials,
+  ] = await Promise.all([
+    getEnrollments(id),
+    getNotices(id),
+    getQnAs(id),
+    isInstructorUser ? getSessionsWithStats(id) : Promise.resolve([]),
+    !isInstructorUser ? getStudentAttendance(id) : Promise.resolve(null),
+    getMaterials(id),
+  ]);
 
   const activeEnrollments = enrollments.filter((e) => e.status === "active");
 
@@ -104,6 +113,9 @@ export default async function ClassDetailPage({
           <TabsList>
             <TabsTrigger value="notices">공지 ({notices.length})</TabsTrigger>
             <TabsTrigger value="qna">QnA ({qnas.length})</TabsTrigger>
+            <TabsTrigger value="materials">
+              자료실 ({materials.length})
+            </TabsTrigger>
             <TabsTrigger value="attendance">
               출결{isInstructorUser ? ` (${attendanceSessions.length})` : ""}
             </TabsTrigger>
@@ -129,6 +141,14 @@ export default async function ClassDetailPage({
               qnas={qnas}
               isInstructor={isInstructorUser}
               currentUserId={user.id}
+            />
+          </TabsContent>
+
+          <TabsContent value="materials" className="mt-6">
+            <MaterialsList
+              classId={id}
+              materials={materials}
+              isInstructor={isInstructorUser}
             />
           </TabsContent>
 

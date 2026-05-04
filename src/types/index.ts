@@ -94,3 +94,16 @@ export type StudentAttendanceSummary = {
   total: number
   rate: number
 }
+
+export type Material = {
+  id: string
+  class_id: string
+  uploader_id: string
+  title: string
+  description: string | null
+  file_path: string
+  file_name: string
+  file_size: number
+  mime_type: string | null
+  created_at: string
+}
