@@ -1,19 +1,16 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
-export async function getEmailsByUserIds(
-  userIds: string[],
+export async function getClassMemberEmails(
+  classId: string,
 ): Promise<Map<string, string>> {
   const map = new Map<string, string>();
-  if (userIds.length === 0) return map;
-
-  const admin = createAdminClient();
-  const unique = Array.from(new Set(userIds));
-  const results = await Promise.all(
-    unique.map((id) => admin.auth.admin.getUserById(id)),
-  );
-  for (let i = 0; i < unique.length; i++) {
-    const email = results[i].data.user?.email ?? "";
-    map.set(unique[i], email);
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_class_member_emails", {
+    p_class_id: classId,
+  });
+  if (error || !data) return map;
+  for (const row of data as { user_id: string; email: string }[]) {
+    map.set(row.user_id, row.email ?? "");
   }
   return map;
 }

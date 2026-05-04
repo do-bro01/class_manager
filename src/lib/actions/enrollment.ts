@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isInstructor } from "@/lib/auth/role";
-import { getEmailsByUserIds } from "@/lib/auth/users";
+import { getClassMemberEmails } from "@/lib/auth/users";
 import type { ActionResult, EnrollmentWithEmail } from "@/types";
 
 export async function joinClassByCode(code: string): Promise<ActionResult> {
@@ -82,7 +82,7 @@ export async function getEnrollments(
 
   if (error || !data) return [];
 
-  const emailMap = await getEmailsByUserIds(data.map((r) => r.user_id));
+  const emailMap = await getClassMemberEmails(classId);
 
   return data.map((row) => ({
     id: row.id,

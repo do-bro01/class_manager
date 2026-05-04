@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isInstructor } from "@/lib/auth/role";
-import { getEmailsByUserIds } from "@/lib/auth/users";
+import { getClassMemberEmails } from "@/lib/auth/users";
 import type {
   ActionResult,
   AttendanceSession,
@@ -421,7 +421,7 @@ export async function getSessionRoster(
   const userIds = enrollmentRows.map((e) => e.user_id as string);
 
   const [emailMap, { data: records }] = await Promise.all([
-    getEmailsByUserIds(userIds),
+    getClassMemberEmails(classId),
     userIds.length
       ? supabase
           .from("attendance_records")
