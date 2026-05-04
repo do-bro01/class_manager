@@ -39,14 +39,22 @@ export default function SignupPage() {
 
     setLoading(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp(
-      { email, password },
-      { data: { role } },
-    );
+    const { data, error } = await supabase.auth.signUp({ email, password });
 
     if (error) {
       setError(error.message);
     } else {
+      try {
+        const userId = data?.user?.id;
+        if (userId) {
+          await fetch("/api/set-role", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId, role }),
+          });
+        }
+      } catch (e) {}
+
       setSuccess(
         "가입 확인 이메일이 발송되었습니다. 이메일을 인증한 후 로그인해주세요.",
       );
