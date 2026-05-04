@@ -40,7 +40,7 @@ export default async function SettingsPage() {
           <h2 className="text-lg font-medium">계정 정보</h2>
           <p className="text-sm text-muted-foreground">이메일: {user.email}</p>
           <p className="text-sm text-muted-foreground">
-            현재 역할: {role === "instructor" ? "강사" : "수강생"}
+            현재 역할: {role === "instructor" ? "교수" : "수강생"}
           </p>
         </section>
 
@@ -58,13 +58,13 @@ export default async function SettingsPage() {
         <section className="space-y-4">
           <h2 className="text-lg font-medium">권한</h2>
           {role === "instructor" ? (
-            <p className="text-sm">이미 강사 권한을 보유하고 있습니다.</p>
+            <p className="text-sm">이미 교수 권한을 보유하고 있습니다.</p>
           ) : (
             <form action={changeRole} className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                강사로 신청하면 관리자가 app_metadata에 역할을 부여합니다.
+                교수로 신청하면 관리자가 app_metadata에 역할을 부여합니다.
               </p>
-              <Button type="submit">강사로 신청</Button>
+              <Button type="submit">교수로 신청</Button>
             </form>
           )}
         </section>

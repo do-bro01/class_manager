@@ -10,6 +10,9 @@ import type { User } from "@supabase/supabase-js";
 export default function Header({ user }: { user: User }) {
   const router = useRouter();
   const isInstructorUser = isInstructor(user);
+  const name =
+    typeof user.user_metadata?.name === "string" ? user.user_metadata.name : "";
+  const displayLabel = name ? `${name} (${user.email})` : user.email;
 
   async function handleLogout() {
     const supabase = createClient();
@@ -35,7 +38,7 @@ export default function Header({ user }: { user: User }) {
             설정
           </Link>
           <span className="text-sm text-muted-foreground hidden sm:block">
-            {isInstructorUser ? "강사" : "수강생"} · {user.email}
+            {isInstructorUser ? "교수" : "수강생"} · {displayLabel}
           </span>
           <Button variant="ghost" size="sm" onClick={handleLogout}>
             로그아웃

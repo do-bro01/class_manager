@@ -97,7 +97,7 @@ export default function QnAList({
 
               {qna.answer && (
                 <div className="ml-4 pl-4 border-l-2 border-primary/30 space-y-1">
-                  <p className="text-xs font-medium text-primary">강사 답변</p>
+                  <p className="text-xs font-medium text-primary">교수 답변</p>
                   <p className="text-sm whitespace-pre-wrap">
                     {qna.answer.content}
                   </p>

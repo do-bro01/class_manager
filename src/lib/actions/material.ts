@@ -22,7 +22,7 @@ async function requireInstructorOfClass(classId: string) {
     .eq("id", classId)
     .single();
   if (!cls || cls.instructor_id !== user.id) {
-    throw new Error("해당 수업의 강사가 아닙니다.");
+    throw new Error("해당 수업의 교수가 아닙니다.");
   }
   return { supabase, user };
 }

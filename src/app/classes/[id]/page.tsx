@@ -10,6 +10,7 @@ import {
 } from "@/lib/actions/attendance";
 import { getMaterials } from "@/lib/actions/material";
 import { isInstructor } from "@/lib/auth/role";
+import { getClassInstructor } from "@/lib/auth/users";
 import Header from "@/components/layout/Header";
 import NoticeList from "@/components/features/NoticeList";
 import QnAList from "@/components/features/QnAList";
@@ -48,6 +49,7 @@ export default async function ClassDetailPage({
     attendanceSessions,
     studentAttendance,
     materials,
+    instructor,
   ] = await Promise.all([
     getEnrollments(id),
     getNotices(id),
@@ -55,6 +57,7 @@ export default async function ClassDetailPage({
     isInstructorUser ? getSessionsWithStats(id) : Promise.resolve([]),
     !isInstructorUser ? getStudentAttendance(id) : Promise.resolve(null),
     getMaterials(id),
+    getClassInstructor(id),
   ]);
 
   const activeEnrollments = enrollments.filter((e) => e.status === "active");
@@ -71,6 +74,11 @@ export default async function ClassDetailPage({
                 {cls.institution}
               </p>
               <h1 className="text-2xl font-semibold">{cls.name}</h1>
+              {instructor && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  교수: {instructor.name || instructor.email}
+                </p>
+              )}
               {(cls.start_date || cls.end_date) && (
                 <p className="text-sm text-muted-foreground mt-1">
                   {cls.start_date ?? "?"} ~ {cls.end_date ?? "?"}

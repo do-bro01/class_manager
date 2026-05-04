@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: '수업 관리',
-  description: '강사와 수강생을 위한 수업 관리 플랫폼',
+  description: '교수와 수강생을 위한 수업 관리 플랫폼',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

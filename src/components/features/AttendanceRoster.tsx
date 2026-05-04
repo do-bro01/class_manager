@@ -84,6 +84,7 @@ export default function AttendanceRoster({ classId, sessionId, rows }: Props) {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>이름</TableHead>
             <TableHead>이메일</TableHead>
             <TableHead>상태</TableHead>
             <TableHead className="text-right">최근 입력</TableHead>
@@ -94,7 +95,10 @@ export default function AttendanceRoster({ classId, sessionId, rows }: Props) {
             const value = draft[row.user_id]
             return (
               <TableRow key={row.user_id}>
-                <TableCell className="font-medium">{row.email}</TableCell>
+                <TableCell className="font-medium">
+                  {row.name || <span className="text-muted-foreground">—</span>}
+                </TableCell>
+                <TableCell className="text-muted-foreground">{row.email}</TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
                     {STATUS_OPTIONS.map((opt) => {

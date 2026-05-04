@@ -27,7 +27,7 @@ export async function createPost(
   const isInstructorUser = isInstructor(user);
 
   if (type === "notice" && !isInstructorUser) {
-    return { success: false, error: "공지는 강사만 작성할 수 있습니다." };
+    return { success: false, error: "공지는 교수만 작성할 수 있습니다." };
   }
 
   if (link_url) {

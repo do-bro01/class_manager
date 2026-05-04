@@ -34,6 +34,7 @@ export default function StudentList({ classId, enrollments }: Props) {
     <Table>
       <TableHeader>
         <TableRow>
+          <TableHead>이름</TableHead>
           <TableHead>이메일</TableHead>
           <TableHead>등록일</TableHead>
           <TableHead>상태</TableHead>
@@ -43,7 +44,10 @@ export default function StudentList({ classId, enrollments }: Props) {
       <TableBody>
         {enrollments.map((enrollment) => (
           <TableRow key={enrollment.id}>
-            <TableCell className="font-medium">{enrollment.email}</TableCell>
+            <TableCell className="font-medium">
+              {enrollment.name || <span className="text-muted-foreground">—</span>}
+            </TableCell>
+            <TableCell className="text-muted-foreground">{enrollment.email}</TableCell>
             <TableCell className="text-muted-foreground text-sm">
               {new Date(enrollment.enrolled_at).toLocaleDateString('ko-KR')}
             </TableCell>

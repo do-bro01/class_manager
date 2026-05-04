@@ -103,7 +103,7 @@ export default async function DashboardPage() {
             <div className="text-center py-20 text-muted-foreground">
               <p>아직 등록된 수업이 없습니다.</p>
               <p className="text-sm mt-1">
-                강사에게 초대 코드를 받아 수업에 참여하세요.
+                교수에게 초대 코드를 받아 수업에 참여하세요.
               </p>
             </div>
           ) : (

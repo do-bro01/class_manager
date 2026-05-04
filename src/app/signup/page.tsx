@@ -128,7 +128,7 @@ export default function SignupPage() {
                       checked={role === "instructor"}
                       onChange={() => setRole("instructor")}
                     />
-                    <span className="text-sm">강사</span>
+                    <span className="text-sm">교수</span>
                   </label>
                 </div>
               </div>

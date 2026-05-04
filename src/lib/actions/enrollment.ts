@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isInstructor } from "@/lib/auth/role";
-import { getClassMemberEmails } from "@/lib/auth/users";
+import { getClassMembers } from "@/lib/auth/users";
 import type { ActionResult, EnrollmentWithEmail } from "@/types";
 
 export async function joinClassByCode(code: string): Promise<ActionResult> {
@@ -82,16 +82,20 @@ export async function getEnrollments(
 
   if (error || !data) return [];
 
-  const emailMap = await getClassMemberEmails(classId);
+  const memberMap = await getClassMembers(classId);
 
-  return data.map((row) => ({
-    id: row.id,
-    class_id: row.class_id,
-    user_id: row.user_id,
-    status: row.status,
-    enrolled_at: row.enrolled_at,
-    email: emailMap.get(row.user_id) ?? "",
-  }));
+  return data.map((row) => {
+    const m = memberMap.get(row.user_id);
+    return {
+      id: row.id,
+      class_id: row.class_id,
+      user_id: row.user_id,
+      status: row.status,
+      enrolled_at: row.enrolled_at,
+      email: m?.email ?? "",
+      name: m?.name ?? "",
+    };
+  });
 }
 
 export async function getEnrolledClasses() {

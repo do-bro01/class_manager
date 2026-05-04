@@ -26,6 +26,7 @@ export type Enrollment = {
 
 export type EnrollmentWithEmail = Enrollment & {
   email: string
+  name: string
 }
 
 export type Post = {
@@ -79,6 +80,7 @@ export type SessionRosterRow = {
   enrollment_id: string
   user_id: string
   email: string
+  name: string
   status: AttendanceStatus | null
   marked_at: string | null
 }

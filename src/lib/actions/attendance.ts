@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isInstructor } from "@/lib/auth/role";
-import { getClassMemberEmails } from "@/lib/auth/users";
+import { getClassMembers } from "@/lib/auth/users";
 import type {
   ActionResult,
   AttendanceSession,
@@ -35,7 +35,7 @@ async function requireInstructorOfClass(classId: string) {
     .eq("id", classId)
     .single();
   if (!cls || cls.instructor_id !== user.id) {
-    throw new Error("해당 수업의 강사가 아닙니다.");
+    throw new Error("해당 수업의 교수가 아닙니다.");
   }
   return { supabase, user };
 }
@@ -51,7 +51,7 @@ async function getSessionWithClass(sessionId: string) {
 }
 
 // ============================================================
-// 회차(session) 관리 — 강사 전용
+// 회차(session) 관리 — 교수 전용
 // ============================================================
 
 export async function createSession(
@@ -234,7 +234,7 @@ export async function toggleCheckInOpen(
 }
 
 // ============================================================
-// 출결 표기 — 강사 일괄 입력 / 수강생 자가 체크인
+// 출결 표기 — 교수 일괄 입력 / 수강생 자가 체크인
 // ============================================================
 
 export async function markAttendance(
@@ -309,7 +309,7 @@ export async function selfCheckIn(sessionId: string): Promise<ActionResult> {
   if (!session.check_in_open) {
     return {
       success: false,
-      error: "체크인이 닫혀 있습니다. 강사에게 문의하세요.",
+      error: "체크인이 닫혀 있습니다. 교수에게 문의하세요.",
     };
   }
 
@@ -398,7 +398,7 @@ export async function getSessionRoster(
   sessionId: string,
   classId: string,
 ): Promise<{ session: AttendanceSession; rows: SessionRosterRow[] } | null> {
-  // 강사 전용
+  // 교수 전용
   await requireInstructorOfClass(classId);
   const supabase = await createClient();
 
@@ -420,8 +420,8 @@ export async function getSessionRoster(
   const enrollmentRows = enrollments ?? [];
   const userIds = enrollmentRows.map((e) => e.user_id as string);
 
-  const [emailMap, { data: records }] = await Promise.all([
-    getClassMemberEmails(classId),
+  const [memberMap, { data: records }] = await Promise.all([
+    getClassMembers(classId),
     userIds.length
       ? supabase
           .from("attendance_records")
@@ -445,10 +445,12 @@ export async function getSessionRoster(
     (e: Record<string, unknown>) => {
       const userId = e.user_id as string;
       const rec = recordMap.get(userId);
+      const m = memberMap.get(userId);
       return {
         enrollment_id: e.id as string,
         user_id: userId,
-        email: emailMap.get(userId) ?? "",
+        email: m?.email ?? "",
+        name: m?.name ?? "",
         status: rec?.status ?? null,
         marked_at: rec?.marked_at ?? null,
       };
