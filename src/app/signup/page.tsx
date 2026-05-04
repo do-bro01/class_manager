@@ -1,45 +1,57 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from "react";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function SignupPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirm, setConfirm] = useState('')
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState<"student" | "instructor">("student");
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    setSuccess('')
+    e.preventDefault();
+    setError("");
+    setSuccess("");
 
     if (password !== confirm) {
-      setError('비밀번호가 일치하지 않습니다.')
-      return
+      setError("비밀번호가 일치하지 않습니다.");
+      return;
     }
     if (password.length < 6) {
-      setError('비밀번호는 6자 이상이어야 합니다.')
-      return
+      setError("비밀번호는 6자 이상이어야 합니다.");
+      return;
     }
 
-    setLoading(true)
-    const supabase = createClient()
-    const { error } = await supabase.auth.signUp({ email, password })
+    setLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signUp(
+      { email, password },
+      { data: { role } },
+    );
 
     if (error) {
-      setError(error.message)
+      setError(error.message);
     } else {
-      setSuccess('가입 확인 이메일이 발송되었습니다. 이메일을 인증한 후 로그인해주세요.')
+      setSuccess(
+        "가입 확인 이메일이 발송되었습니다. 이메일을 인증한 후 로그인해주세요.",
+      );
     }
-    setLoading(false)
+    setLoading(false);
   }
 
   return (
@@ -54,7 +66,9 @@ export default function SignupPage() {
             <div className="text-center space-y-4">
               <p className="text-sm text-muted-foreground">{success}</p>
               <Link href="/login">
-                <Button variant="outline" className="w-full">로그인 페이지로</Button>
+                <Button variant="outline" className="w-full">
+                  로그인 페이지로
+                </Button>
               </Link>
             </div>
           ) : (
@@ -91,16 +105,45 @@ export default function SignupPage() {
                   required
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label>역할</Label>
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="student"
+                      checked={role === "student"}
+                      onChange={() => setRole("student")}
+                    />
+                    <span className="text-sm">수강생</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="instructor"
+                      checked={role === "instructor"}
+                      onChange={() => setRole("instructor")}
+                    />
+                    <span className="text-sm">강사</span>
+                  </label>
+                </div>
+              </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? '가입 중...' : '회원가입'}
+                {loading ? "가입 중..." : "회원가입"}
               </Button>
             </form>
           )}
           {!success && (
             <p className="mt-4 text-center text-sm text-muted-foreground">
-              이미 계정이 있으신가요?{' '}
-              <Link href="/login" className="underline underline-offset-4 hover:text-primary">
+              이미 계정이 있으신가요?{" "}
+              <Link
+                href="/login"
+                className="underline underline-offset-4 hover:text-primary"
+              >
                 로그인
               </Link>
             </p>
@@ -108,5 +151,5 @@ export default function SignupPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
