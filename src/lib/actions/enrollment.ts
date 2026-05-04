@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isInstructor } from "@/lib/auth/role";
+import { getEmailsByUserIds } from "@/lib/auth/users";
 import type { ActionResult, EnrollmentWithEmail } from "@/types";
 
 export async function joinClassByCode(code: string): Promise<ActionResult> {
@@ -73,21 +74,23 @@ export async function getEnrollments(
   classId: string,
 ): Promise<EnrollmentWithEmail[]> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("enrollments")
-    .select("*, users:user_id(email)")
+    .select("id, class_id, user_id, status, enrolled_at")
     .eq("class_id", classId)
     .order("enrolled_at", { ascending: false });
 
-  if (!data) return [];
+  if (error || !data) return [];
 
-  return data.map((row: Record<string, unknown>) => ({
-    id: row.id as string,
-    class_id: row.class_id as string,
-    user_id: row.user_id as string,
-    status: row.status as "active" | "inactive",
-    enrolled_at: row.enrolled_at as string,
-    email: (row.users as { email: string } | null)?.email ?? "",
+  const emailMap = await getEmailsByUserIds(data.map((r) => r.user_id));
+
+  return data.map((row) => ({
+    id: row.id,
+    class_id: row.class_id,
+    user_id: row.user_id,
+    status: row.status,
+    enrolled_at: row.enrolled_at,
+    email: emailMap.get(row.user_id) ?? "",
   }));
 }
 

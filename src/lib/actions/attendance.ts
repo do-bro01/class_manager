@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isInstructor } from "@/lib/auth/role";
+import { getEmailsByUserIds } from "@/lib/auth/users";
 import type {
   ActionResult,
   AttendanceSession,
@@ -411,19 +412,24 @@ export async function getSessionRoster(
 
   const { data: enrollments } = await supabase
     .from("enrollments")
-    .select("id, user_id, users:user_id(email)")
+    .select("id, user_id")
     .eq("class_id", classId)
     .eq("status", "active")
     .order("enrolled_at", { ascending: true });
 
-  const userIds = (enrollments ?? []).map((e) => e.user_id as string);
-  const { data: records } = userIds.length
-    ? await supabase
-        .from("attendance_records")
-        .select("user_id, status, marked_at")
-        .eq("session_id", sessionId)
-        .in("user_id", userIds)
-    : { data: [] };
+  const enrollmentRows = enrollments ?? [];
+  const userIds = enrollmentRows.map((e) => e.user_id as string);
+
+  const [emailMap, { data: records }] = await Promise.all([
+    getEmailsByUserIds(userIds),
+    userIds.length
+      ? supabase
+          .from("attendance_records")
+          .select("user_id, status, marked_at")
+          .eq("session_id", sessionId)
+          .in("user_id", userIds)
+      : Promise.resolve({ data: [] }),
+  ]);
 
   const recordMap = new Map(
     (records ?? []).map((r: Record<string, unknown>) => [
@@ -435,14 +441,14 @@ export async function getSessionRoster(
     ]),
   );
 
-  const rows: SessionRosterRow[] = (enrollments ?? []).map(
+  const rows: SessionRosterRow[] = enrollmentRows.map(
     (e: Record<string, unknown>) => {
       const userId = e.user_id as string;
       const rec = recordMap.get(userId);
       return {
         enrollment_id: e.id as string,
         user_id: userId,
-        email: (e.users as { email: string } | null)?.email ?? "",
+        email: emailMap.get(userId) ?? "",
         status: rec?.status ?? null,
         marked_at: rec?.marked_at ?? null,
       };
