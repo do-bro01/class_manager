@@ -15,7 +15,19 @@ export async function getClassMembers(
   const { data, error } = await supabase.rpc("get_class_members", {
     p_class_id: classId,
   });
-  if (error || !data) return map;
+  if (error) {
+    console.error("[getClassMembers] RPC error:", {
+      message: (error as { message?: string }).message,
+      code: (error as { code?: string }).code,
+      details: (error as { details?: string }).details,
+      hint: (error as { hint?: string }).hint,
+    });
+    return map;
+  }
+  if (!data) return map;
+  console.log(
+    `[getClassMembers] classId=${classId} returned ${(data as unknown[]).length} rows`,
+  );
   for (const row of data as { user_id: string; email: string; name: string }[]) {
     map.set(row.user_id, {
       email: row.email ?? "",

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { isInstructor } from "@/lib/auth/role";
 import { Button } from "@/components/ui/button";
+import ThemeToggle from "@/components/layout/ThemeToggle";
 import type { User } from "@supabase/supabase-js";
 
 export default function Header({ user }: { user: User }) {
@@ -40,6 +41,7 @@ export default function Header({ user }: { user: User }) {
           <span className="text-sm text-muted-foreground hidden sm:block">
             {isInstructorUser ? "교수" : "수강생"} · {displayLabel}
           </span>
+          <ThemeToggle />
           <Button variant="ghost" size="sm" onClick={handleLogout}>
             로그아웃
           </Button>
