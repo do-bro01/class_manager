@@ -8,18 +8,39 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Class } from "@/types";
 
-const DAYS = ["월", "화", "수", "목", "금", "토", "일"];
-const SELECTABLE_DAYS = [0, 1, 2, 3, 4]; // Mon-Fri
+const DAYS = ["월", "화", "수", "목", "금"];
+const HOURS = Array.from({ length: 18 }, (_, i) => i); // 0-17시
+const MINUTES = [0, 10, 20, 30, 40, 50]; // 10분 단위
 
 type Props = {
   cls?: Class;
 };
 
+function timeStringToHourMinute(timeStr: string): [number, number] {
+  if (!timeStr) return [9, 0];
+  const [h, m] = timeStr.split(":").map(Number);
+  return [h, m];
+}
+
+function hourMinuteToTimeString(hour: number, minute: number): string {
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
 export default function ClassForm({ cls }: Props) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [selectedDay, setSelectedDay] = useState<number | null>(cls?.day_of_week ?? null);
+  const [selectedDay, setSelectedDay] = useState<number | null>(
+    cls?.day_of_week ?? null,
+  );
+
+  const [startHour, startMinute] = timeStringToHourMinute(cls?.start_time ?? "");
+  const [endHour, endMinute] = timeStringToHourMinute(cls?.end_time ?? "");
+
+  const [selectedStartHour, setSelectedStartHour] = useState(startHour);
+  const [selectedStartMinute, setSelectedStartMinute] = useState(startMinute);
+  const [selectedEndHour, setSelectedEndHour] = useState(endHour);
+  const [selectedEndMinute, setSelectedEndMinute] = useState(endMinute);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -30,6 +51,15 @@ export default function ClassForm({ cls }: Props) {
     if (selectedDay !== null) {
       formData.append("day_of_week", selectedDay.toString());
     }
+
+    formData.set(
+      "start_time",
+      hourMinuteToTimeString(selectedStartHour, selectedStartMinute),
+    );
+    formData.set(
+      "end_time",
+      hourMinuteToTimeString(selectedEndHour, selectedEndMinute),
+    );
 
     const result = cls
       ? await updateClass(cls.id, formData)
@@ -75,48 +105,76 @@ export default function ClassForm({ cls }: Props) {
       <div className="space-y-2">
         <Label>요일 *</Label>
         <div className="flex gap-2 flex-wrap">
-          {DAYS.map((day, idx) => {
-            const isSelectable = SELECTABLE_DAYS.includes(idx);
-            return (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => isSelectable && setSelectedDay(selectedDay === idx ? null : idx)}
-                disabled={!isSelectable}
-                className={`px-3 py-2 rounded-md font-medium transition-colors ${
-                  isSelectable
-                    ? selectedDay === idx
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-primary/20"
-                    : "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
-                }`}
-              >
-                {day}
-              </button>
-            );
-          })}
+          {DAYS.map((day, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => setSelectedDay(selectedDay === idx ? null : idx)}
+              className={`px-3 py-2 rounded-md font-medium transition-colors ${
+                selectedDay === idx
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-primary/20"
+              }`}
+            >
+              {day}
+            </button>
+          ))}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="start_time">시작 시간</Label>
-          <Input
-            id="start_time"
-            name="start_time"
-            type="time"
-            step="600"
-            defaultValue={cls?.start_time ?? ""}
-          />
+          <Label>시작 시간</Label>
+          <div className="flex gap-2">
+            <select
+              value={selectedStartHour}
+              onChange={(e) => setSelectedStartHour(Number(e.target.value))}
+              className="flex-1 rounded-md border border-input bg-background px-3 py-2"
+            >
+              {HOURS.map((h) => (
+                <option key={h} value={h}>
+                  {String(h).padStart(2, "0")}
+                </option>
+              ))}
+            </select>
+            <select
+              value={selectedStartMinute}
+              onChange={(e) => setSelectedStartMinute(Number(e.target.value))}
+              className="flex-1 rounded-md border border-input bg-background px-3 py-2"
+            >
+              {MINUTES.map((m) => (
+                <option key={m} value={m}>
+                  {String(m).padStart(2, "0")}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="end_time">종료 시간</Label>
-          <Input
-            id="end_time"
-            name="end_time"
-            type="time"
-            step="600"
-            defaultValue={cls?.end_time ?? ""}
-          />
+          <Label>종료 시간</Label>
+          <div className="flex gap-2">
+            <select
+              value={selectedEndHour}
+              onChange={(e) => setSelectedEndHour(Number(e.target.value))}
+              className="flex-1 rounded-md border border-input bg-background px-3 py-2"
+            >
+              {HOURS.map((h) => (
+                <option key={h} value={h}>
+                  {String(h).padStart(2, "0")}
+                </option>
+              ))}
+            </select>
+            <select
+              value={selectedEndMinute}
+              onChange={(e) => setSelectedEndMinute(Number(e.target.value))}
+              className="flex-1 rounded-md border border-input bg-background px-3 py-2"
+            >
+              {MINUTES.map((m) => (
+                <option key={m} value={m}>
+                  {String(m).padStart(2, "0")}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">

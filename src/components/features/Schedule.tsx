@@ -15,21 +15,20 @@ type ScheduleProps = {
 };
 
 const DAYS = ["월", "화", "수", "목", "금"];
-const START_HOUR = 8;
-const END_HOUR = 22;
-const SLOT_MINUTES = 10;
-const TOTAL_SLOTS = (END_HOUR - START_HOUR) * (60 / SLOT_MINUTES);
+const START_HOUR = 9;
+const END_HOUR = 18;
+const COLORS = [
+  "bg-muted border-border text-foreground",
+  "bg-muted border-border text-foreground",
+];
 
-function timeToSlot(time: string): number {
+function timeToMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number);
-  return (h - START_HOUR) * (60 / SLOT_MINUTES) + m / SLOT_MINUTES;
+  return h * 60 + m;
 }
 
-function slotToTime(slot: number): string {
-  const totalMinutes = START_HOUR * 60 + slot * SLOT_MINUTES;
-  const h = Math.floor(totalMinutes / 60);
-  const m = totalMinutes % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+function minutesToHour(minutes: number): number {
+  return minutes / 60;
 }
 
 interface ScheduleBlock {
@@ -37,8 +36,9 @@ interface ScheduleBlock {
   className: string;
   instructorName: string;
   dayOfWeek: number;
-  startSlot: number;
-  endSlot: number;
+  startMinutes: number;
+  endMinutes: number;
+  colorIndex: number;
   columnIndex: number;
   maxColumns: number;
 }
@@ -51,7 +51,8 @@ function getScheduleBlocks(classes: any[]): ScheduleBlock[] {
     dayColumns.set(day, []);
   }
 
-  for (const cls of classes) {
+  for (let i = 0; i < classes.length; i++) {
+    const cls = classes[i];
     if (
       cls.day_of_week === null ||
       cls.start_time === null ||
@@ -60,8 +61,8 @@ function getScheduleBlocks(classes: any[]): ScheduleBlock[] {
       continue;
     }
 
-    const startSlot = timeToSlot(cls.start_time);
-    const endSlot = timeToSlot(cls.end_time);
+    const startMinutes = timeToMinutes(cls.start_time);
+    const endMinutes = timeToMinutes(cls.end_time);
     const day = cls.day_of_week;
 
     const block: ScheduleBlock = {
@@ -69,8 +70,9 @@ function getScheduleBlocks(classes: any[]): ScheduleBlock[] {
       className: cls.name,
       instructorName: cls.instructor?.name || "",
       dayOfWeek: day,
-      startSlot,
-      endSlot,
+      startMinutes,
+      endMinutes,
+      colorIndex: i % COLORS.length,
       columnIndex: 0,
       maxColumns: 1,
     };
@@ -82,8 +84,8 @@ function getScheduleBlocks(classes: any[]): ScheduleBlock[] {
       let canPlaceInColumn = true;
       for (const existingBlock of existingColumn) {
         if (
-          startSlot < existingBlock.endSlot &&
-          endSlot > existingBlock.startSlot
+          startMinutes < existingBlock.endMinutes &&
+          endMinutes > existingBlock.startMinutes
         ) {
           canPlaceInColumn = false;
           break;
@@ -92,12 +94,14 @@ function getScheduleBlocks(classes: any[]): ScheduleBlock[] {
       if (canPlaceInColumn) {
         existingColumn.push(block);
         block.columnIndex = columnIndex;
-        block.maxColumns = Math.max(block.maxColumns, dayBlocks.length);
+        block.maxColumns = dayBlocks.length;
         for (const col of dayBlocks) {
           for (const b of col) {
-            b.maxColumns = Math.max(b.maxColumns, dayBlocks.length);
+            b.maxColumns = dayBlocks.length;
           }
         }
+        dayColumns.set(day, dayBlocks);
+        blocks.push(block);
         break;
       }
       columnIndex++;
@@ -107,10 +111,9 @@ function getScheduleBlocks(classes: any[]): ScheduleBlock[] {
       dayBlocks.push([block]);
       block.columnIndex = columnIndex;
       block.maxColumns = dayBlocks.length;
+      dayColumns.set(day, dayBlocks);
+      blocks.push(block);
     }
-
-    dayColumns.set(day, dayBlocks);
-    blocks.push(block);
   }
 
   return blocks;
@@ -128,80 +131,106 @@ export default function Schedule({ classes, isInstructor }: ScheduleProps) {
     );
   }
 
+  const hours = Array.from(
+    { length: END_HOUR - START_HOUR },
+    (_, i) => START_HOUR + i,
+  );
+  const SLOTS_PER_HOUR = 6; // 10분 단위
+
   return (
     <div className="overflow-x-auto rounded-lg border border-border">
-      <div className="min-w-max">
+      <div className="bg-card inline-block min-w-full">
         <div
-          className="grid bg-card"
-          style={{ gridTemplateColumns: "60px repeat(5, 1fr)" }}
+          className="grid gap-0 relative"
+          style={{
+            gridTemplateColumns: "60px repeat(5, minmax(120px, 1fr))",
+            gridTemplateRows: `auto repeat(${(END_HOUR - START_HOUR) * SLOTS_PER_HOUR}, 10px)`,
+          }}
         >
-          <div className="border-b border-r border-border bg-muted p-2 text-center text-xs font-semibold">
-            시간
-          </div>
+          {/* Header row */}
+          <div className="border-b border-r border-border bg-muted p-2 text-center text-xs font-semibold" />
           {DAYS.map((day) => (
             <div
               key={day}
-              className="border-b border-r border-border bg-muted p-2 text-center text-xs font-semibold"
+              className="border-b border-r border-border bg-muted p-2 text-center text-xs font-bold"
             >
               {day}
             </div>
           ))}
 
-          {Array.from({ length: TOTAL_SLOTS }).map((_, slotIdx) => {
-            const time = slotToTime(slotIdx);
-            const showTimeLabel = slotIdx % 6 === 0;
+          {/* Time rows and cells */}
+          {hours.map((hour, hourIdx) => (
+            <div key={`row-${hour}`} style={{ display: "contents" }}>
+              {/* Time label */}
+              <div
+                className="border-b border-r border-border bg-muted p-2 text-center text-sm font-bold"
+                style={{
+                  gridColumn: 1,
+                  gridRow: `${hourIdx * SLOTS_PER_HOUR + 2} / span ${SLOTS_PER_HOUR}`,
+                }}
+              >
+                {hour}
+              </div>
+
+              {/* Day cells */}
+              {DAYS.map((_, dayIdx) => (
+                <div
+                  key={`cell-${dayIdx}-${hour}`}
+                  className="border-b border-r border-border bg-background"
+                  style={{
+                    gridColumn: dayIdx + 2,
+                    gridRow: `${hourIdx * SLOTS_PER_HOUR + 2} / span ${SLOTS_PER_HOUR}`,
+                  }}
+                />
+              ))}
+            </div>
+          ))}
+
+          {/* Class blocks */}
+          {blocks.map((block) => {
+            const startMinutesFromStart = block.startMinutes - START_HOUR * 60;
+            const endMinutesFromStart = block.endMinutes - START_HOUR * 60;
+
+            const startSlot = Math.floor(startMinutesFromStart / 10);
+            const endSlot = Math.ceil(endMinutesFromStart / 10);
+
+            const startRow = startSlot + 2;
+            const endRow = endSlot + 2;
+            const colStart = block.dayOfWeek + 2;
+
+            const startTimeStr = `${String(Math.floor(block.startMinutes / 60)).padStart(2, "0")}:${String(block.startMinutes % 60).padStart(2, "0")}`;
+            const endTimeStr = `${String(Math.floor(block.endMinutes / 60)).padStart(2, "0")}:${String(block.endMinutes % 60).padStart(2, "0")}`;
 
             return (
-              <div
-                key={`time-${slotIdx}`}
-                className={`border-b border-r border-border p-1 text-center text-xs ${
-                  slotIdx % 6 === 0 ? "bg-muted" : "bg-background"
-                }`}
-                style={{ height: "20px" }}
+              <Link
+                key={`${block.classId}`}
+                href={`/classes/${block.classId}`}
+                className={`border-2 border-current rounded px-2 py-1 text-xs ${
+                  COLORS[block.colorIndex]
+                } hover:shadow-md transition-shadow cursor-pointer flex flex-col overflow-hidden`}
+                style={{
+                  gridColumn: `${colStart} / span 1`,
+                  gridRow: `${startRow} / ${endRow}`,
+                  zIndex: block.columnIndex,
+                  marginLeft: `${(block.columnIndex / block.maxColumns) * 100}%`,
+                  width: `${(1 / block.maxColumns) * 100}%`,
+                }}
               >
-                {showTimeLabel && (
-                  <span className="text-muted-foreground">{time}</span>
+                <div className="font-bold truncate">
+                  {block.className}
+                </div>
+                <div className="text-xs truncate">
+                  {startTimeStr}~{endTimeStr}
+                </div>
+                {!isInstructor && block.instructorName && (
+                  <div className="text-xs truncate">
+                    {block.instructorName}
+                  </div>
                 )}
-              </div>
+              </Link>
             );
           })}
-
-          {Array.from({ length: TOTAL_SLOTS }).map((_, slotIdx) => {
-            return DAYS.map((_, dayIdx) => {
-              const dayBlocks = blocks.filter((b) => b.dayOfWeek === dayIdx);
-              const overlappingBlocks = dayBlocks.filter(
-                (b) => b.startSlot <= slotIdx && b.endSlot > slotIdx,
-              );
-
-              return (
-                <div
-                  key={`cell-${dayIdx}-${slotIdx}`}
-                  className="border-b border-r border-border bg-background"
-                  style={{ height: "20px", position: "relative" }}
-                />
-              );
-            });
-          })}
         </div>
-      </div>
-
-      <div className="space-y-2 p-4">
-        {blocks.map((block) => (
-          <Link
-            key={block.classId}
-            href={`/classes/${block.classId}`}
-            className="block rounded-md border border-border bg-primary p-3 text-primary-foreground transition-all hover:shadow-md cursor-pointer"
-          >
-            <div className="font-medium">{block.className}</div>
-            {!isInstructor && block.instructorName && (
-              <div className="text-sm">{block.instructorName}</div>
-            )}
-            <div className="text-sm">
-              {DAYS[block.dayOfWeek]} {slotToTime(block.startSlot)}-
-              {slotToTime(block.endSlot)}
-            </div>
-          </Link>
-        ))}
       </div>
     </div>
   );

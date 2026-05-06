@@ -33,8 +33,7 @@ export default async function DashboardPage() {
       <div className="min-h-screen flex flex-col">
         <Header user={user} />
         <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-semibold">내 수업 목록</h1>
+          <div className="flex items-center justify-end mb-6">
             <div className="flex items-center gap-3">
               <Link href="/settings">
                 <Button variant="outline">프로필</Button>
@@ -57,6 +56,7 @@ export default async function DashboardPage() {
                 <h2 className="text-lg font-semibold mb-4">시간표</h2>
                 <Schedule classes={classes} isInstructor={true} />
               </div>
+              <h2 className="text-lg font-semibold mb-4">내 수업 목록</h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {classes.map((cls: Class) => (
                   <Link key={cls.id} href={`/classes/${cls.id}`}>
@@ -67,7 +67,10 @@ export default async function DashboardPage() {
                       </CardHeader>
                       <CardContent>
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="font-mono text-xs">
+                          <Badge
+                            variant="outline"
+                            className="font-mono text-xs"
+                          >
                             {cls.invite_code}
                           </Badge>
                         </div>
@@ -101,8 +104,7 @@ export default async function DashboardPage() {
           <InviteCodeInput />
         </section>
         <section>
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-semibold">내 수업 목록</h1>
+          <div className="flex items-center justify-end mb-4">
             <Link href="/settings">
               <Button variant="outline">프로필</Button>
             </Link>
@@ -120,27 +122,32 @@ export default async function DashboardPage() {
                 <h2 className="text-lg font-semibold mb-4">시간표</h2>
                 <Schedule classes={enrolledClassList} isInstructor={false} />
               </div>
+              <h2 className="text-lg font-semibold mb-4">내 수업 목록</h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {enrollments.map((enrollment: { id: string; classes: Class }) => {
-                  const cls = enrollment.classes;
-                  return (
-                    <Link key={enrollment.id} href={`/classes/${cls.id}`}>
-                      <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-                        <CardHeader>
-                          <CardTitle className="text-base">{cls.name}</CardTitle>
-                          <CardDescription>{cls.institution}</CardDescription>
-                        </CardHeader>
-                        {(cls.start_date || cls.end_date) && (
-                          <CardContent>
-                            <p className="text-xs text-muted-foreground">
-                              {cls.start_date ?? "?"} ~ {cls.end_date ?? "?"}
-                            </p>
-                          </CardContent>
-                        )}
-                      </Card>
-                    </Link>
-                  );
-                })}
+                {enrollments.map(
+                  (enrollment: { id: string; classes: Class }) => {
+                    const cls = enrollment.classes;
+                    return (
+                      <Link key={enrollment.id} href={`/classes/${cls.id}`}>
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+                          <CardHeader>
+                            <CardTitle className="text-base">
+                              {cls.name}
+                            </CardTitle>
+                            <CardDescription>{cls.institution}</CardDescription>
+                          </CardHeader>
+                          {(cls.start_date || cls.end_date) && (
+                            <CardContent>
+                              <p className="text-xs text-muted-foreground">
+                                {cls.start_date ?? "?"} ~ {cls.end_date ?? "?"}
+                              </p>
+                            </CardContent>
+                          )}
+                        </Card>
+                      </Link>
+                    );
+                  },
+                )}
               </div>
             </>
           )}
