@@ -33,15 +33,13 @@ export default async function DashboardPage() {
       <div className="min-h-screen flex flex-col">
         <Header user={user} />
         <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8">
-          <div className="flex items-center justify-end mb-6">
-            <div className="flex items-center gap-3">
-              <Link href="/settings">
-                <Button variant="outline">프로필</Button>
-              </Link>
-              <Link href="/classes/new">
-                <Button>+ 새 수업 만들기</Button>
-              </Link>
-            </div>
+          <div className="flex items-center justify-end mb-6 gap-3">
+            <Link href="/settings">
+              <Button variant="outline">프로필</Button>
+            </Link>
+            <Link href="/classes/new">
+              <Button>+ 새 수업 만들기</Button>
+            </Link>
           </div>
           {classes.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">

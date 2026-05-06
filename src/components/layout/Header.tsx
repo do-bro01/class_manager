@@ -32,12 +32,6 @@ export default function Header({ user }: { user: User }) {
           수업 관리
         </Link>
         <div className="flex items-center gap-3">
-          <Link
-            href="/settings"
-            className="text-sm text-muted-foreground hidden sm:block hover:underline"
-          >
-            설정
-          </Link>
           <span className="text-sm text-muted-foreground hidden sm:block">
             {isInstructorUser ? "교수" : "수강생"} · {displayLabel}
           </span>
