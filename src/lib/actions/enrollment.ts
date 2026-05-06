@@ -19,7 +19,7 @@ export async function joinClassByCode(code: string): Promise<ActionResult> {
 
   const { data: cls } = await supabase
     .from("classes")
-    .select("id")
+    .select("id, day_of_week, start_time, end_time")
     .eq("invite_code", trimmedCode)
     .single();
 
@@ -33,6 +33,33 @@ export async function joinClassByCode(code: string): Promise<ActionResult> {
     .single();
 
   if (existing) return { success: false, error: "이미 등록된 수업입니다." };
+
+  if (cls.day_of_week !== null && cls.start_time && cls.end_time) {
+    const { data: enrolledClasses } = await supabase
+      .from("enrollments")
+      .select("classes(id, day_of_week, start_time, end_time)")
+      .eq("user_id", user.id)
+      .eq("status", "active");
+
+    if (enrolledClasses) {
+      for (const enrollment of enrolledClasses) {
+        const enrolledCls = (enrollment as any).classes;
+        if (
+          enrolledCls &&
+          enrolledCls.day_of_week === cls.day_of_week &&
+          enrolledCls.start_time &&
+          enrolledCls.end_time &&
+          enrolledCls.start_time < cls.end_time &&
+          enrolledCls.end_time > cls.start_time
+        ) {
+          return {
+            success: false,
+            error: "참여한 다른 수업과 시간이 겹칩니다.",
+          };
+        }
+      }
+    }
+  }
 
   const { error } = await supabase.from("enrollments").insert({
     class_id: cls.id,

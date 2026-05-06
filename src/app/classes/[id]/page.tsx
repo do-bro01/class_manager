@@ -79,6 +79,12 @@ export default async function ClassDetailPage({
                   교수: {instructor.name || instructor.email}
                 </p>
               )}
+              {cls.day_of_week !== null && cls.start_time && cls.end_time && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  요일: {["월", "화", "수", "목", "금"][cls.day_of_week]}{" "}
+                  {cls.start_time}-{cls.end_time}
+                </p>
+              )}
               {(cls.start_date || cls.end_date) && (
                 <p className="text-sm text-muted-foreground mt-1">
                   {cls.start_date ?? "?"} ~ {cls.end_date ?? "?"}

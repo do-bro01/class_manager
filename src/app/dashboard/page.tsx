@@ -6,6 +6,7 @@ import { getEnrolledClasses } from "@/lib/actions/enrollment";
 import { isInstructor } from "@/lib/auth/role";
 import Header from "@/components/layout/Header";
 import InviteCodeInput from "@/components/features/InviteCodeInput";
+import Schedule from "@/components/features/Schedule";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -51,30 +52,36 @@ export default async function DashboardPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {classes.map((cls: Class) => (
-                <Link key={cls.id} href={`/classes/${cls.id}`}>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-                    <CardHeader>
-                      <CardTitle className="text-base">{cls.name}</CardTitle>
-                      <CardDescription>{cls.institution}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="font-mono text-xs">
-                          {cls.invite_code}
-                        </Badge>
-                      </div>
-                      {(cls.start_date || cls.end_date) && (
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {cls.start_date ?? "?"} ~ {cls.end_date ?? "?"}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
+            <>
+              <div className="mb-8">
+                <h2 className="text-lg font-semibold mb-4">시간표</h2>
+                <Schedule classes={classes} isInstructor={true} />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {classes.map((cls: Class) => (
+                  <Link key={cls.id} href={`/classes/${cls.id}`}>
+                    <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+                      <CardHeader>
+                        <CardTitle className="text-base">{cls.name}</CardTitle>
+                        <CardDescription>{cls.institution}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {cls.invite_code}
+                          </Badge>
+                        </div>
+                        {(cls.start_date || cls.end_date) && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                            {cls.start_date ?? "?"} ~ {cls.end_date ?? "?"}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </>
           )}
         </main>
       </div>
@@ -83,6 +90,7 @@ export default async function DashboardPage() {
 
   // 수강생 뷰
   const enrollments = await getEnrolledClasses();
+  const enrolledClassList = enrollments.map((e: any) => e.classes);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -107,28 +115,34 @@ export default async function DashboardPage() {
               </p>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {enrollments.map((enrollment: { id: string; classes: Class }) => {
-                const cls = enrollment.classes;
-                return (
-                  <Link key={enrollment.id} href={`/classes/${cls.id}`}>
-                    <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-                      <CardHeader>
-                        <CardTitle className="text-base">{cls.name}</CardTitle>
-                        <CardDescription>{cls.institution}</CardDescription>
-                      </CardHeader>
-                      {(cls.start_date || cls.end_date) && (
-                        <CardContent>
-                          <p className="text-xs text-muted-foreground">
-                            {cls.start_date ?? "?"} ~ {cls.end_date ?? "?"}
-                          </p>
-                        </CardContent>
-                      )}
-                    </Card>
-                  </Link>
-                );
-              })}
-            </div>
+            <>
+              <div className="mb-8">
+                <h2 className="text-lg font-semibold mb-4">시간표</h2>
+                <Schedule classes={enrolledClassList} isInstructor={false} />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {enrollments.map((enrollment: { id: string; classes: Class }) => {
+                  const cls = enrollment.classes;
+                  return (
+                    <Link key={enrollment.id} href={`/classes/${cls.id}`}>
+                      <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+                        <CardHeader>
+                          <CardTitle className="text-base">{cls.name}</CardTitle>
+                          <CardDescription>{cls.institution}</CardDescription>
+                        </CardHeader>
+                        {(cls.start_date || cls.end_date) && (
+                          <CardContent>
+                            <p className="text-xs text-muted-foreground">
+                              {cls.start_date ?? "?"} ~ {cls.end_date ?? "?"}
+                            </p>
+                          </CardContent>
+                        )}
+                      </Card>
+                    </Link>
+                  );
+                })}
+              </div>
+            </>
           )}
         </section>
       </main>
